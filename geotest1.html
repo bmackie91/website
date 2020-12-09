@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Sewanee Directions Service</title>
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+      #panel {
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        margin-left: -180px;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+      }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>
+
+<script>
+var directionsDisplay;
+var directionsService = new google.maps.DirectionsService();
+var infowindow = new google.maps.InfoWindow();
+var geocoder = new google.maps.Geocoder();
+var map;
+var currentLocation = "27 Canterbury Way, Sewanee, TN, 37375";
+
+
+function initialize() {
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var lat = pos.coords.latitude;
+    var lng = pos.coords.longitude;
+    directionsDisplay = new google.maps.DirectionsRenderer();
+    var latlng = new google.maps.LatLng(lat, lng);
+    var mapOptions = {
+      zoom:15,
+      center: latlng
+    };
+    map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+    geocoder.geocode({'latLng': latlng}, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        if (results[0]) {
+          map.setZoom(15);
+          marker = new google.maps.Marker({
+              position: latlng,
+              map: map
+          });
+          currentLocation = results[0].formatted_address;
+          infowindow.setContent(results[0].formatted_address);
+          infowindow.open(map, marker);
+        } else {
+          alert('No results found');
+        }
+      } else {
+        alert('Geocoder failed due to: ' + status);
+      }
+    });
+    directionsDisplay.setMap(map);
+  });
+}
+
+function calcRoute() {
+  var end = document.getElementById('end').value;
+  var request = {
+      origin: currentLocation,
+      destination: end,
+      travelMode: google.maps.TravelMode.WALKING
+  };
+  directionsService.route(request, function(response, status) {
+    if (status == google.maps.DirectionsStatus.OK) {
+      directionsDisplay.setDirections(response);
+    }
+  });
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+</script>
+
+  </head>
+  <body>
+    <div id="panel">
+    <b>Directions to</b>
+    <select id="end" onchange="calcRoute();">
+      <option value="27 Canterbury Way, Sewanee, TN, 37375">27 Canterbury</option>
+      <option value="92 Dubose Ln, Sewanee, TN 37375">Gailor Hall</option>
+      <option value="1260 University Avenue, Sewanee, TN 37375">Hospital</option>
+    </select>
+    </div>
+    <div id="map-canvas"></div>
+  </body>
+</html>
